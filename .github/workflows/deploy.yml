@@ -20,13 +20,15 @@ jobs:
 
     - name: Install dependencies
       run: npm install
+      working-directory: ./vue  # Update this path to where your package.json is located
 
     - name: Build project
       run: npm run build  # 假设你的构建命令是 `npm run build`
+      working-directory: ./vue  # Ensure this matches the path above
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./dist  # 假设构建输出目录是 `dist`
+        publish_dir: ./vue/dist  # Update this path if necessary
         destination_branch: gh-pages  # 部署到 `gh-pages` 分支
