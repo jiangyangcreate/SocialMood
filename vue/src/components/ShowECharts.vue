@@ -1,15 +1,23 @@
 <template>
   <div class="chart-container">
-    <div ref="barChart" class="chart"></div>
-    <div ref="pieChart" class="chart"></div>
-    <div ref="lineChart" class="chart"></div>
-    <div ref="wordCloudChart" class="chart"></div>
+    <div class="chart-row">
+      <div ref="barChart" class="chart"></div>
+      <div ref="pieChart" class="chart"></div>
+    </div>
+    <div class="chart-row">
+      <div ref="lineChart" class="chart"></div>
+      <div ref="wordCloudChart" class="chart"></div>
+    </div>
   </div>
 </template>
 
 <script>
 import * as echarts from 'echarts';
 import 'echarts-wordcloud';
+import { barChartData } from '../data/barChartData';
+import { pieChartData } from '../data/pieChartData';
+import { lineChartData } from '../data/lineChartData';
+import { wordCloudData } from '../data/wordCloudData';
 
 export default {
   name: 'ECharts',
@@ -23,32 +31,47 @@ export default {
     initBarChart() {
       const chart = echarts.init(this.$refs.barChart);
       const option = {
-        title: { text: 'Sales Data', left: 'center' },
+        title: { text: '舆情情感分析', left: 'center' },
         tooltip: { trigger: 'axis' },
-        legend: { data: ['Sales'], top: 'bottom' },
-        xAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E'] },
+        legend: { data: ['正面', '负面'], top: 'bottom' },
+        xAxis: { 
+          type: 'category', 
+          data: barChartData.map(item => item.category) 
+        },
         yAxis: { type: 'value' },
-        series: [{ name: 'Sales', type: 'bar', data: [5, 20, 36, 10, 10] }]
+        series: [
+          {
+            name: '正面',
+            type: 'bar',
+            data: barChartData.map(item => item.positive),
+            itemStyle: { color: '#91cc75' }
+          },
+          {
+            name: '负面',
+            type: 'bar',
+            data: barChartData.map(item => item.negative),
+            itemStyle: { color: '#ee6666' }
+          }
+        ]
       };
       chart.setOption(option);
     },
     initPieChart() {
       const chart = echarts.init(this.$refs.pieChart);
       const option = {
-        title: { text: 'Market Share', left: 'center' },
+        title: { text: '舆情影响占比', left: 'center' },
         tooltip: { trigger: 'item' },
-        legend: { orient: 'vertical', left: 'left' },
+        legend: {
+          orient: 'horizontal',
+          bottom: 'bottom',
+          left: 'center'
+        },
         series: [
           {
             name: 'Share',
             type: 'pie',
             radius: '50%',
-            data: [
-              { value: 40, name: 'A' },
-              { value: 20, name: 'B' },
-              { value: 30, name: 'C' },
-              { value: 10, name: 'D' }
-            ],
+            data: pieChartData,
             emphasis: {
               itemStyle: {
                 shadowBlur: 10,
@@ -64,19 +87,26 @@ export default {
     initLineChart() {
       const chart = echarts.init(this.$refs.lineChart);
       const option = {
-        title: { text: 'Weekly Sales', left: 'center' },
+        title: { text: '舆情变化图', left: 'center' },
         tooltip: { trigger: 'axis' },
-        legend: { data: ['Sales'], top: 'bottom' },
-        xAxis: { type: 'category', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+        legend: { data: ['舆情指数'], top: 'bottom' },
+        xAxis: { 
+          type: 'category', 
+          data: lineChartData.map(item => item.date)
+        },
         yAxis: { type: 'value' },
-        series: [{ name: 'Sales', type: 'line', data: [150, 230, 224, 218, 135, 147, 260] }]
+        series: [{ 
+          name: '舆情指数', 
+          type: 'line', 
+          data: lineChartData.map(item => item.value)
+        }]
       };
       chart.setOption(option);
     },
     initWordCloudChart() {
       const chart = echarts.init(this.$refs.wordCloudChart);
       const option = {
-        title: { text: 'Technology Popularity', left: 'center' },
+        title: { text: '舆情词云图', left: 'center' },
         series: [
           {
             type: 'wordCloud',
@@ -94,13 +124,7 @@ export default {
                 }
               }
             },
-            data: [
-              { name: 'Vue', value: 10000 },
-              { name: 'ECharts', value: 6181 },
-              { name: 'JavaScript', value: 4386 },
-              { name: 'HTML', value: 4055 },
-              { name: 'CSS', value: 2467 }
-            ]
+            data: wordCloudData
           }
         ]
       };
@@ -114,12 +138,32 @@ export default {
 .chart-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.chart-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
 }
 
 .chart {
-  width: 600px;
+  width: 100%;
   height: 400px;
   margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+  .chart {
+    width: calc(50% - 10px);
+    margin-right: 20px;
+  }
+
+  .chart:nth-child(2n) {
+    margin-right: 0;
+  }
 }
 </style>

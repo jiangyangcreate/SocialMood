@@ -1,16 +1,16 @@
 <template>
   <div id="app">
-    <EChartsDemo />
+    <ECharts />
   </div>
 </template>
 
 <script>
-import EChartsDemo from './components/EChartsDemo.vue';
+import ECharts from './components/ShowECharts.vue';
 
 export default {
   name: 'App',
   components: {
-    EChartsDemo
+    ECharts
   }
 };
 </script>

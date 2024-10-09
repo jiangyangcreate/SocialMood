@@ -1,4 +1,5 @@
 import re
+import os 
 from datetime import datetime
 
 import jieba
@@ -27,8 +28,10 @@ class WebScraper:
 
 
 class DataProcessor:
-    def __init__(self, html_content):
+    def __init__(self, html_content,data,time):
         self.html_content = html_content
+        self.data = data
+        self.time = time
         self.df = pd.DataFrame(
             columns=["日期", "时间", "信息来源", "标题", "排名", "热度", "链接"]
         )
@@ -68,7 +71,6 @@ class DataProcessor:
             "node-19": "哔哩哔哩",
             "node-221": "抖音",
         }
-        date, time = str(datetime.now()).split()
 
         for info_id, info_from in data_infos.items():
             infos = soup.find(id=info_id)
@@ -81,7 +83,7 @@ class DataProcessor:
                     [
                         self.df,
                         pd.DataFrame(
-                            [[date, time, info_from, title, rank, hot, url]],
+                            [[self.data, self.time, info_from, title, rank, hot, url]],
                             columns=self.df.columns,
                         ),
                     ],
@@ -172,7 +174,7 @@ class DataProcessor:
             # 获取拟合的系数
             slope = lr.coef_[0]
             intercept = lr.intercept_
-            print(f"拟合的幂律方程为: y = {np.exp(intercept):.2f} * x^{slope:.2f}")
+            # print(f"拟合的幂律方程为: y = {np.exp(intercept):.2f} * x^{slope:.2f}")
 
             # 预测缺失值
             X_missing = X[y.isnull()]
@@ -219,18 +221,24 @@ def main(debug=True):
         scraper = WebScraper()
         html_content = scraper.fetch_webpage_content()
         db.save_raw_html(html_content)  # 保存原始HTML
-        # 删除 news 子表
     else:
-        # db.clear_table('news')
         db.delete_table("news")
         db = NewsDatabase()
-    html_content = db.read_data("SELECT * FROM raw_html")["内容"][0]
 
-    processor = DataProcessor(html_content)
-    result_df = processor.run()
+    html_contents = db.read_data("SELECT * FROM raw_html")
 
-    db.save_data(result_df)
 
+    for _, row in html_contents.iterrows():
+        html_content = row["内容"]
+        date = row["日期"]
+        time = row["时间"]
+        processor = DataProcessor(html_content,date ,time)
+        result_df = processor.run()
+
+        db.save_data(result_df)
+
+    data_path = os.path.join(os.path.dirname(__file__), '..', 'vue', 'src', 'data')
+    db.export_line_chart_data(os.path.join(data_path,'lineChartData.js'))
 
 if __name__ == "__main__":
     main(debug=True)
