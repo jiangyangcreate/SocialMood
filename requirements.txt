@@ -1,0 +1,13 @@
+wordcloud
+jieba
+pillow
+beautifulsoup4
+openpyxl
+requests
+imageio
+playwright
+nltk
+snownlp
+scikit-learn
+transformers
+torch
