@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # 监听主分支的变更
+      - main
 
 jobs:
   build:
@@ -16,19 +16,19 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16'  # 使用 Node.js 版本
+        node-version: '16'
 
     - name: Install dependencies
       run: npm install
-      working-directory: ./vue  # Update this path to where your package.json is located
+      working-directory: ./vue
 
     - name: Build project
-      run: npm run build  # 假设你的构建命令是 `npm run build`
-      working-directory: ./vue  # Ensure this matches the path above
+      run: npm run build
+      working-directory: ./vue
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./vue/dist  # Update this path if necessary
-        destination_branch: gh-pages  # 部署到 `gh-pages` 分支
+        publish_dir: ./vue/dist
+        publish_branch: gh-pages
