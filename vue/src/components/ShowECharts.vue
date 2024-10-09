@@ -33,7 +33,18 @@ export default {
       const option = {
         title: { text: '舆情情感分析', left: 'center' },
         tooltip: { trigger: 'axis' },
-        legend: { data: ['正面', '负面'], top: 'bottom' },
+        legend: {
+          data: ['正面', '负面'],
+          top: '5%',
+          right: '5%'
+        },
+        grid: {
+          top: '15%',
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true
+        },
         xAxis: { 
           type: 'category', 
           data: barChartData.map(item => item.category) 
@@ -55,6 +66,7 @@ export default {
         ]
       };
       chart.setOption(option);
+      window.addEventListener('resize', () => chart.resize());
     },
     initPieChart() {
       const chart = echarts.init(this.$refs.pieChart);
@@ -63,8 +75,7 @@ export default {
         tooltip: { trigger: 'item' },
         legend: {
           orient: 'horizontal',
-          bottom: 'bottom',
-          left: 'center'
+          bottom: 'bottom'
         },
         series: [
           {
@@ -83,6 +94,7 @@ export default {
         ]
       };
       chart.setOption(option);
+      window.addEventListener('resize', () => chart.resize());
     },
     initLineChart() {
       const chart = echarts.init(this.$refs.lineChart);
@@ -90,6 +102,12 @@ export default {
         title: { text: '舆情变化图', left: 'center' },
         tooltip: { trigger: 'axis' },
         legend: { data: ['舆情指数'], top: 'bottom' },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '10%',
+          containLabel: true
+        },
         xAxis: { 
           type: 'category', 
           data: lineChartData.map(item => item.date)
@@ -102,6 +120,7 @@ export default {
         }]
       };
       chart.setOption(option);
+      window.addEventListener('resize', () => chart.resize());
     },
     initWordCloudChart() {
       const chart = echarts.init(this.$refs.wordCloudChart);
@@ -114,21 +133,18 @@ export default {
             sizeRange: [12, 50],
             rotationRange: [-90, 90],
             textStyle: {
-              normal: {
-                color: function () {
-                  return 'rgb(' + [
-                    Math.round(Math.random() * 160),
-                    Math.round(Math.random() * 160),
-                    Math.round(Math.random() * 160)
-                  ].join(',') + ')';
-                }
-              }
+              color: () => 'rgb(' + [
+                Math.round(Math.random() * 160),
+                Math.round(Math.random() * 160),
+                Math.round(Math.random() * 160)
+              ].join(',') + ')'
             },
             data: wordCloudData
           }
         ]
       };
       chart.setOption(option);
+      window.addEventListener('resize', () => chart.resize());
     }
   }
 };
@@ -154,6 +170,7 @@ export default {
   width: 100%;
   height: 400px;
   margin-bottom: 20px;
+  min-width: 300px;
 }
 
 @media (min-width: 768px) {
