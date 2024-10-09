@@ -6,6 +6,7 @@
 
 项目开源地址：[https://github.com/jiangyangcreate/SocialMood](https://github.com/jiangyangcreate/SocialMood)
 
+项目查看地址：[https://jiangyangcreate.github.io/SocialMood/](https://jiangyangcreate.github.io/SocialMood/)
 
 ## 使用流程
 
