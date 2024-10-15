@@ -19,7 +19,7 @@ class WebScraper:
     def fetch_webpage_content(self) -> str:
         """获取网页内容"""
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.firefox.launch(headless=False)
             page = browser.new_page()
             page.goto(self.url)
             content = page.content()
@@ -99,7 +99,7 @@ class DataProcessor:
             return (s.sentiments - 0.5) * 2  # 将0-1范围转换为-1到1
         else:
             sia = SentimentIntensityAnalyzer()
-            return sia.polarity_scores(text)
+            return sia.polarity_scores(text)["compound"]
 
     @staticmethod
     def get_word_split(text: str) -> list:
@@ -120,7 +120,6 @@ class DataProcessor:
         self.df["分词"] = self.df["标题"].apply(self.get_word_split)
 
     def sentiment_analysis(self):
-        # 添加加权情绪值计算
         情感得分_index = self.df.columns.get_loc("情感得分")
         self.df.insert(
             情感得分_index + 1,
