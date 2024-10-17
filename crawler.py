@@ -10,6 +10,77 @@ from nltk.sentiment import SentimentIntensityAnalyzer
 from playwright.sync_api import sync_playwright
 from sklearn.linear_model import LinearRegression
 from snownlp import SnowNLP
+from pyecharts.charts import Bar, Line, Pie, WordCloud, Page
+from pyecharts import options as opts
+
+from database import NewsDatabase
+
+class ChartGenerator:
+    def create_bar_chart(self, data , y_label="Sentiment",title="Sentiment Scores by Source") -> Bar:
+        """Generate a bar chart with positive, negative, and absolute sentiment scores."""
+
+        x_data, y_data_positive, y_data_negative, y_data_absolute = zip(*data)
+        bar = (
+            Bar()
+            .add_xaxis(x_data)
+            .add_yaxis("Positive Sentiment", y_data_positive, stack="stack1", category_gap="50%")
+            .add_yaxis("Negative Sentiment", y_data_negative, stack="stack2", category_gap="50%")
+            .add_yaxis("Absolute Sentiment", y_data_absolute, stack="stack3", category_gap="50%")
+            .set_global_opts(
+                title_opts=opts.TitleOpts(title=title, pos_left="center"),
+                xaxis_opts=opts.AxisOpts(name="Source"),
+                yaxis_opts=opts.AxisOpts(name="Sentiment Score"),
+                legend_opts=opts.LegendOpts(pos_top="10%", pos_right="10%"),
+            )
+        )
+        return bar
+
+    def create_line_chart(self,data,y_label="Weighted Sentiment Score Sum",title="Sum of Weighted Sentiment Scores Over Time") -> Line:
+        """Generate a line chart."""
+        x_data, y_data = zip(*data) 
+        line = (
+            Line()
+            .add_xaxis(x_data)
+            .add_yaxis(y_label, y_data, is_smooth=True)
+            .set_global_opts(
+                title_opts=opts.TitleOpts(title=title, pos_left="center"),
+                xaxis_opts=opts.AxisOpts(name="Date", axislabel_opts=opts.LabelOpts(rotate=45)),
+                yaxis_opts=opts.AxisOpts(name=y_label),
+                legend_opts=opts.LegendOpts(pos_bottom="0%")
+            )
+        )
+        return line
+
+    def create_pie_chart(self, data_pairs, title="Information Source Heat") -> Pie:
+        """Generate a pie chart."""
+        pie = (
+            Pie()
+            .add("", data_pairs)
+            .set_global_opts(
+                title_opts=opts.TitleOpts(title=title, pos_left="center"),
+                legend_opts=opts.LegendOpts(pos_bottom="0%")  # Move legend to the bottom
+            )
+            .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {d}%"))
+        )
+        return pie
+
+    def create_wordcloud(self, words, title="Word Cloud") -> WordCloud:
+        """Generate a word cloud."""
+        wordcloud = (
+            WordCloud()
+            .add("", words, word_size_range=[20, 100],shape="circle")
+            .set_global_opts(title_opts=opts.TitleOpts(title=title, pos_left="center"))
+        )
+        return wordcloud
+
+    def render_charts(self, charts, output_file=None):
+        """Render multiple charts to a single HTML file."""
+        if output_file is None:
+            output_file = os.path.join("html", "charts.html")
+
+        page = Page(layout=Page.SimplePageLayout)
+        page.add(*charts)
+        page.render(output_file)
 
 
 class WebScraper:
@@ -25,7 +96,6 @@ class WebScraper:
             content = page.content()
             browser.close()
         return content
-
 
 class DataProcessor:
     def __init__(self, html_content,data,time):
@@ -213,8 +283,6 @@ class DataProcessor:
 
 
 def main(debug=True):
-    from database import NewsDatabase
-
     db = NewsDatabase()
     if not debug:
         scraper = WebScraper()
@@ -226,21 +294,35 @@ def main(debug=True):
 
     html_contents = db.read_data("SELECT * FROM raw_html")
 
-
     for _, row in html_contents.iterrows():
         html_content = row["内容"]
         date = row["日期"]
         time = row["时间"]
-        processor = DataProcessor(html_content,date ,time)
+        processor = DataProcessor(html_content, date, time)
         result_df = processor.run()
-
         db.save_data(result_df)
+    
+    # 调用绘图方法
+    chart_gen = ChartGenerator()
 
-    data_path = os.path.join(os.path.dirname(__file__), '..', 'vue', 'src', 'data')
-    db.export_line_chart_data(os.path.join(data_path,'lineChartData.js'))
+    # 获取数据
+    word_cloud_data = db.export_word_cloud_data()
+    pie_chart_data = db.export_pie_chart_data()
+    line_chart_data = db.export_line_chart_data()
+    bar_chart_data = db.export_bar_chart_data()
 
+    # 创建图表
+    word_cloud = chart_gen.create_wordcloud(word_cloud_data)
+    pie_chart = chart_gen.create_pie_chart(pie_chart_data)
+    line_chart = chart_gen.create_line_chart(line_chart_data)
+    bar_chart = chart_gen.create_bar_chart(bar_chart_data)
+
+    # 渲染图表
+    charts = [word_cloud, 
+              pie_chart, 
+              line_chart,
+              bar_chart
+              ]
+    chart_gen.render_charts(charts)
 if __name__ == "__main__":
     main(debug=True)
-
-
-

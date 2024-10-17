@@ -11,3 +11,4 @@ snownlp
 scikit-learn
 transformers
 torch
+pyecharts

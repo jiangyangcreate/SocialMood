@@ -15,18 +15,9 @@
 cd python
 python setup.py
 
-# 运行数据抓取
+# 运行数据抓取，生成静态网页：html/charts.html
 python crawler.py
-
-cd ../vue
-## 本地图表开发
-pnpm i
-pnpm serve
-# 打开 `http://localhost:8080` 来查看 demo。
-
 ```
-
-## 后端
 
 ### 依赖安装
 
@@ -63,7 +54,6 @@ pnpm serve
 
 为了通过gitpages展示数据，我还将数据导出为 `json` 文件，这样可以直接在gitpages上展示。
 
-## 前端
 
 ### 数据可视化
 
@@ -72,8 +62,7 @@ pnpm serve
 - 公众情绪的涨跌折线图。
 - 每日全网词云图。
 
-通过Vue的脚手架，导出为静态网页。
-
+通过pyecharts的脚手架，导出为静态网页。
 
 
 # 代码设置
