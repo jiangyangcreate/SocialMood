@@ -76,7 +76,7 @@ class ChartGenerator:
     def render_charts(self, charts, output_file=None):
         """Render multiple charts to a single HTML file."""
         if output_file is None:
-            output_file = os.path.join("docs", "charts.html")
+            output_file = os.path.join("docs", "index.html")
 
         page = Page(layout=Page.SimplePageLayout)
         page.add(*charts)
@@ -325,4 +325,4 @@ def main(debug=True):
               ]
     chart_gen.render_charts(charts)
 if __name__ == "__main__":
-    main(debug=True)
+    main(debug=False)
