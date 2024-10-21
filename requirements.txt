@@ -12,3 +12,5 @@ scikit-learn
 transformers
 torch
 pyecharts
+accelerate>=0.26.0
+transformers

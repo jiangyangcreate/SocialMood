@@ -15,6 +15,52 @@ from pyecharts import options as opts
 
 from database import NewsDatabase
 
+class Qwen2Model:
+    _model = None
+    _tokenizer = None
+    _device = None
+    model_name = "Qwen/Qwen2.5-7B-Instruct"
+    @classmethod
+    def _initialize(cls):
+        if cls._model is None or cls._tokenizer is None:
+            print("初始化Qwen2模型")
+            from transformers import AutoModelForCausalLM, AutoTokenizer
+            import torch
+            torch.cuda.empty_cache()  # 清理缓存
+            cls._device = "cuda"
+            cls._model = AutoModelForCausalLM.from_pretrained(
+                cls.model_name,
+                torch_dtype=torch.float16,
+                device_map="auto" if torch.cuda.is_available() else None
+            ).to(cls._device)
+            cls._tokenizer = AutoTokenizer.from_pretrained(cls.model_name)
+
+    @classmethod
+    def get_sentiment_score(cls,text):
+        prompt = "请仅对用户提供的句子进行情感评分，并返回介于-1到1之间的分数。-1表示非常负面，1表示非常正面，0表示中立。无需提供其他信息或上下文。"
+        messages = [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": text}
+        ]
+        text = cls._tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+        model_inputs = cls._tokenizer([text], return_tensors="pt").to(cls._model.device)
+
+        generated_ids = cls._model.generate(
+            **model_inputs,
+            max_new_tokens=512
+        )
+        generated_ids = [
+            output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+        ]
+
+        response = cls._tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+
+        return float(response)
+
 class ChartGenerator:
     def create_bar_chart(self, data , y_label="Sentiment",title="Sentiment Scores by Source") -> Bar:
         """Generate a bar chart with positive, negative, and absolute sentiment scores."""
@@ -163,13 +209,17 @@ class DataProcessor:
     @staticmethod
     def get_text_score(text: str) -> float:
         """获取文本的情感得分，范围从-1到1"""
-        if re.search(r"[\u4e00-\u9fff]", text):  # 检测是否包含中文字符
-            text = text.replace(" ", "")
-            s = SnowNLP(text)
-            return (s.sentiments - 0.5) * 2  # 将0-1范围转换为-1到1
-        else:
-            sia = SentimentIntensityAnalyzer()
-            return sia.polarity_scores(text)["compound"]
+        try:
+            Qwen2Model._initialize()
+            return Qwen2Model.get_sentiment_score(text)
+        except:
+            if re.search(r"[\u4e00-\u9fff]", text):  # 检测是否包含中文字符
+                text = text.replace(" ", "")
+                s = SnowNLP(text)
+                return (s.sentiments - 0.5) * 2  # 将0-1范围转换为-1到1
+            else:
+                sia = SentimentIntensityAnalyzer()
+                return sia.polarity_scores(text)["compound"]
 
     @staticmethod
     def get_word_split(text: str) -> list:
@@ -275,7 +325,7 @@ class DataProcessor:
             return group
 
         # 对每个信息来源分别进行缺失值填充
-        self.df = self.df.groupby("信息来源").apply(impute_group)
+        self.df = self.df.groupby("信息来源", group_keys=True).apply(impute_group)
 
         # 删除仍然为None的行（如果有的话）
         self.df = self.df.dropna(subset=["处理后热度"])
@@ -325,4 +375,4 @@ def main(debug=True):
               ]
     chart_gen.render_charts(charts)
 if __name__ == "__main__":
-    main(debug=False)
+    main(debug=True)
